@@ -1,41 +1,33 @@
 const Request = require("../models/request");
+const fastq = require('fastq');
+
+
+const MAX_WORKERS = 1;
+
+async function worker(arg, cb) {
+    console.log('Processing req', arg.id);
+
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    arg.completed();
+    cb(null, arg);
+}
 
 class RequestQueue {
     constructor() {
-        this.queue = [];
-        this.start = -1;
-        this._length = 0;
+        this.queue = fastq(worker, MAX_WORKERS);
     }
 
     get length() {
-        return this._length;
+        return this.queue.length;
     }
 
     /**
      * Add to queue
      * @param {Request} request Request Object to add
      */
-    add(request) {
-        this._length++;
-        this.queue.push(request);
-        if (this.start === -1) {
-            this.start = 0;
-        }
-    }
-
-    /**
-     * Remove from queue
-     * @returns {Request}
-     */
-    dequeue() {
-        if (this.queue.length === 0) {
-            return;
-        }
-        // TODO: find a better off shelf implementation with O(1) dequeue
-        this.start++;
-        this._length--;
-
-        return this.queue[this.start - 1];
+    add(request, cb) {
+        this.queue.push(request, cb);
     }
 }
 

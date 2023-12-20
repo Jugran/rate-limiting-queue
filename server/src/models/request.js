@@ -13,6 +13,7 @@ class Request {
         this.uuid = uuid;
         this.callbackURL = callbackURL;
         this.status = 'pending';
+        this.timestamp = new Date().getTime()
     }
     
     get data() {

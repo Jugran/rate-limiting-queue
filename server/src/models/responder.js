@@ -6,12 +6,37 @@ class Responder {
     constructor() {
         this.queue = new RequestQueue();
         this.store = new RequestStore();
+        this.limit = 1;
     }
 
     newRequest(url, method, body, headers, uuid, callbackURL) {
         const req = new Request(url, method, body, headers, uuid, callbackURL);
+
+        const reqCount = this.store.getActiveUserRequestCount(uuid);
+
+        console.log(`Request count for ${uuid}`, reqCount);
+
+        if (reqCount >= this.limit) {
+            console.log(`Request limit reached for ${uuid}`, reqCount);
+            req.rejected();
+            this.store.add(req);
+            return req;
+        }
+
         this.store.add(req);
-        this.queue.add(req);
+        this.queue.add(req, (err, result) => {
+            if (!result) {
+                console.error('No result received from queue');
+                return;
+            }
+
+            if (err) {
+                console.error(err);
+                result.failed();
+            }
+
+            this.store.updateStatus(result.id, result.status);
+        });
 
         return req;
     }
@@ -32,7 +57,7 @@ class Responder {
             cancelled: 0
         }
 
-        const allRequests  = userRequests.map(reqId => this.store.getRequest(reqId));
+        const allRequests = userRequests.map(reqId => this.store.getRequest(reqId));
 
         stats.total = allRequests.length;
         stats.requests = allRequests

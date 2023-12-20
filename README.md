@@ -11,4 +11,4 @@ npm run start
 ### Checklist
 - [x] Entity & util Classes
 - [x] Required Endpoints
-- [ ] Async Rate Limiter Class
+- [x] Async Rate Limiter Class

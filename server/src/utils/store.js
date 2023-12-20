@@ -41,6 +41,12 @@ class RequestStore {
         return req;
     }
 
+    updateStatus(id, status) {
+        console.log(`Updating status for ${id} to ${status}`);
+        const req = this.requests[id];
+        req.status = status;
+    }
+
     /**
      * fetch from store
      * @param {string} requestId
@@ -57,6 +63,26 @@ class RequestStore {
      */
     getUserRequests(uuid) {
         return this.userMap[uuid] ?? [];
+    }
+
+    /**
+     * Get a users requests in last 1 minute
+     * @param {string} uuid
+     * @returns {number}
+     */
+    getActiveUserRequestCount(uuid) {
+        const userRequests = this.getUserRequests(uuid);
+        const now = new Date().getTime();
+        
+        const requests = userRequests.filter(request => {
+            if (request.status === 'rejected') {
+                // rejected requests are not counted
+                return false;
+            }
+            return now - request.timestamp < 60000
+        });
+
+        return requests.length;
     }
 
 }
